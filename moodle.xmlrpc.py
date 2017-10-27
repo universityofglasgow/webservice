@@ -1,28 +1,13 @@
-import requests
+import xmlrpc.client
 import pprint
 import sys
-import json
 
 class Moodle:
     "Access Moodle web services"
 
     def __init__(self, host, token):
-        self.url = host + '/webservice/rest/server.php'
-        self.token = token
-        self.pp = pprint.PrettyPrinter(indent=4)
-
-    def rest(self, function, params):
-        payload = {
-            'wstoken': self.token,
-            'moodlewsrestformat': 'json',
-            'wsfunction': function
-        }
-        payload.update(params)
-        print(payload)
-        headers = {'Content-Type': 'text/plain'}
-        result = requests.post(self.url, data=payload)
-        print(result.status_code, result.reason)
-        return result
+        url = host + '/webservice/xmlrpc/server.php?wstoken=' + token        
+        self.proxy = xmlrpc.client.ServerProxy(url)
 
     def core_user_delete_users(self, id):
         ids = [id]
@@ -48,10 +33,8 @@ class Moodle:
             'key': key,
             'value': value
         }
-        params = {'criteria[]': [item]};
-        result = self.rest('core_user_get_users', params)
-        print(result.text)
-        sys.exit(0)
+        data = [item]
+        result = self.proxy.core_user_get_users(data)
         if result['users']:
             user = result['users'][0]
         else:
